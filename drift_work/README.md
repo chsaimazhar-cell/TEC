@@ -1,6 +1,8 @@
 # Drift — Social Video Downloader
 
-Drift is a polished single-page downloader for **publicly accessible media** from supported social platforms. It uses a Python backend with `yt-dlp` and FFmpeg and a lightweight HTML/CSS/JavaScript frontend.
+Drift is a legacy snapshot of a single-page downloader for **publicly accessible media** from supported social platforms. It uses a Python backend with `yt-dlp` and FFmpeg and a lightweight HTML/CSS/JavaScript frontend.
+
+> This archive is retained for reference. The maintained project is at https://github.com/chsaimazhar-cell/drift. This older backend does not verify or transcode every downloaded stream to H.264 MP4 before naming it `.mp4`; do not use it as a public production service without repairing that behavior and reviewing deployment security.
 
 ## What this rebuild fixes
 
