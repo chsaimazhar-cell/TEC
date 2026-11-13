@@ -1,0 +1,59 @@
+name: Inspect archived project
+
+on:
+  push:
+    branches: [main, "maintenance/**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  inspect-archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Inspect ZIP integrity and contents
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import py_compile
+          import tempfile
+
+          archive = Path("SAIM VIDEO DOWNLODER PROJECT.zip")
+          if not archive.is_file():
+              raise SystemExit(f"Archive not found: {archive}")
+          with ZipFile(archive) as zipped:
+              bad_member = zipped.testzip()
+              if bad_member:
+                  raise SystemExit(f"Corrupt ZIP member: {bad_member}")
+              names = zipped.namelist()
+              print(f"ZIP integrity: PASS ({len(names)} entries)")
+              for name in names:
+                  print(name)
+              with tempfile.TemporaryDirectory() as temp:
+                  zipped.extractall(temp)
+                  root = Path(temp)
+                  python_files = sorted(root.rglob("*.py"))
+                  failures = []
+                  for source in python_files:
+                      try:
+                          py_compile.compile(str(source), doraise=True)
+                      except py_compile.PyCompileError as exc:
+                          failures.append((source.relative_to(root), str(exc)))
+                  print(f"Python files: {len(python_files)}")
+                  print(f"Syntax failures: {len(failures)}")
+                  for path, error in failures:
+                      print(f"FAIL {path}: {error}")
+                  for candidate in sorted(root.rglob("requirements*.txt")):
+                      print(f"--- {candidate.relative_to(root)} ---")
+                      print(candidate.read_text(encoding="utf-8", errors="replace")[:8000])
+                  for candidate in sorted(root.rglob("README*")):
+                      print(f"--- {candidate.relative_to(root)} ---")
+                      print(candidate.read_text(encoding="utf-8", errors="replace")[:8000])
+                  if failures:
+                      raise SystemExit(1)
+          PY
