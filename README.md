@@ -2,7 +2,9 @@
 
 This repository contains the original **SAIM VIDEO DOWNLODER PROJECT.zip** package. The ZIP contains a project named **Drift — Social Video Downloader**, with a Python backend, a separate HTML/CSS/JavaScript frontend, and a backend integration test.
 
-The original ZIP is preserved so the uploaded source package is not lost. The project is also being unpacked into the `drift_work/` directory for easier browsing and maintenance.
+The original ZIP is preserved under `archive/`, and its source is unpacked into `drift_work/` for easier browsing and maintenance.
+
+**This is a legacy snapshot, not the maintained application.** Use the current [Drift repository](https://github.com/chsaimazhar-cell/drift) for the actively maintained downloader. The archived backend's integration harness passes, but it does not verify/convert every downloaded stream to H.264 MP4 before naming the result `.mp4`. Do not treat this archive as production-ready or expose it publicly without further repair and security review.
 
 > **Responsible use:** Only download media you own or are authorized to save. Follow copyright law and platform terms. Do not use the software to bypass DRM, private accounts, paywalls, or other access controls.
 
