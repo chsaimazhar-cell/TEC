@@ -1,0 +1,66 @@
+name: Inspect archived project
+
+on:
+  push:
+    branches: [main, "maintenance/**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  inspect-archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install system media tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Extract and inspect ZIP
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import py_compile
+
+          archive = Path("archive/SAIM VIDEO DOWNLODER PROJECT.zip")
+          if not archive.is_file():
+              raise SystemExit(f"Archive not found: {archive}")
+          with ZipFile(archive) as zipped:
+              bad_member = zipped.testzip()
+              if bad_member:
+                  raise SystemExit(f"Corrupt ZIP member: {bad_member}")
+              print(f"ZIP integrity: PASS ({len(zipped.namelist())} entries)")
+              zipped.extractall(".")
+          root = Path("drift_work")
+          python_files = sorted(root.rglob("*.py"))
+          failures = []
+          for source in python_files:
+              try:
+                  py_compile.compile(str(source), doraise=True)
+              except py_compile.PyCompileError as exc:
+                  failures.append((source, str(exc)))
+          print(f"Python files: {len(python_files)}")
+          print(f"Syntax failures: {len(failures)}")
+          for path, error in failures:
+              print(f"FAIL {path}: {error}")
+          if failures:
+              raise SystemExit(1)
+          PY
+      - name: Install archived backend dependencies
+        run: python -m pip install -r drift_work/backend/requirements.txt
+      - name: Run backend integration suite
+        working-directory: drift_work/backend
+        run: python test_backend.py
+      - name: Check frontend JavaScript syntax
+        run: node --check drift_work/frontend/js/app.js
+      - name: Upload extracted source for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: tec-extracted-source
+          path: |
+            archive/
+            drift_work/
